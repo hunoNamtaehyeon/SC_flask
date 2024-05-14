@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+
+<body>
+    <h2>학과 목록</h2>
+    <table border="1">
+        <tbody>
+            {% for row in all_dept %}
+            <tr>
+                {% for dept in row %}
+                <td>{{ dept }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <h2>학과 검색</h2>
+    <form id="searchForm">
+        <input type="text" id="query" placeholder="학과 입력", size=30>
+        <button type="submit">검색</button>
+    </form>
+    <h5>* 위 학과명을 복사하여 검색하세요.</h5>
+    <h5>* 전체 학과로 검색하려면 공란으로 검색하세요.</h5>
+    <h5>* 2개 이상 학과를 조합하려면 콤마( , )를 활용하세요.</h5>
+    <h5>* 소요시간 : 5초 내외</h5>
+    <br><br><br>
+    <div id="graph" style="border: 1px solid;"></div>
+ 
+    
+    <script>
+        document.getElementById('searchForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const query = document.getElementById('query').value;
+            
+            fetch(`/search?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    const graphDiv = document.getElementById('graph');
+                    graphDiv.innerHTML = data.graph_html;
+
+                    // Ensure Plotly's script is correctly executed
+                    const scripts = graphDiv.getElementsByTagName('script');
+                    for (let script of scripts) {
+                        eval(script.innerHTML);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>
