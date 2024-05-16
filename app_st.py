@@ -3,6 +3,7 @@ import streamlit as st
 import chart_studio.plotly as py
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import json
 import pandas as pd
 import numpy as np
@@ -19,7 +20,7 @@ st.set_page_config(layout="wide")
 
 @st.cache_data
 def fontRegistered():
-    font_dirs = [os.getcwd() + './MALGUN.ttf']
+    font_dirs = [os.getcwd() + '/MALGUN.ttf']
     font_files = matplotlib.font_manager.findSystemFonts(fontpaths=font_dirs)
 
     for font_file in font_files:
@@ -41,7 +42,7 @@ SC['EMP'] = SC['EMP'].astype(int)
 SC['MM_all_subj'] = SC['MM_all_subj'].astype(float)
 SC['MM_per_subj'] = SC['MM_per_subj'].astype(float)
 
-def make_graphs(df,title,scaled=False):
+def make_graphs(df,title,select_term,tabs,scaled=False):
     if scaled:
         print("스케일된 상태")
     else:
@@ -54,12 +55,11 @@ def make_graphs(df,title,scaled=False):
     display_df = df.groupby('EMP')['MEAN'].mean().reset_index()
     display_df['EMP'] = display_df['EMP'].map(employment_map)
     
+    # display(display_df)
     
     range_min_0= (for_hist_df_0.min()//0.25)*0.25
     range_min_1= (for_hist_df_1.min()//0.25)*0.25
     range_min = min(range_min_0, range_min_1)
-
-    fig, ax = plt.subplots(1, 2, figsize=(14, 5))
 
     if scaled:
         range_max = 1 
@@ -68,47 +68,40 @@ def make_graphs(df,title,scaled=False):
         range_max = 4.5
         term = 0.2
     bins = int((range_max - range_min)//term)
-        
-    hist_graph = ax[0].hist((for_hist_df_0,for_hist_df_1), bins=bins, range=(range_min,range_max), label=('미취업', '취업'))
-    bin_centers = (hist_graph[1][:-1] + (term/2))
-    
-    for i in hist_graph[0]:
-        spline = make_interp_spline(bin_centers, i, k=3)  # k=3은 cubic spline을 의미함
-        smooth_x = np.linspace(bin_centers.min(), bin_centers.max(), 100)
-        smooth_y = [0 if ss < 0 else ss for ss in spline(smooth_x)]
-        ax[0].plot(smooth_x, smooth_y)
-    
-    # 막대 중앙에 빈도수 표시
-    for i, patches in enumerate(hist_graph[2]):  # hist_graph[2]는 각 데이터 세트의 막대(Patches) 리스트를 포함
-        for rect in patches:
-            height = rect.get_height()
-            if height != 0: 
-                ax[0].text(rect.get_x() + rect.get_width() / 2, height, f'{int(height)}',
-                        ha='center', va='bottom', fontweight='bold', color='blue')
-
             
-    ax[0].set_title(f"{title}_히스토그램")
-    ax[0].set_xlabel("평균성적")
-    ax[0].set_ylabel("학생 수")
-    ax[0].legend()
+    fig = make_subplots(rows=1, cols=2, subplot_titles=(f"{title}_히스토그램", f"{title}_박스플롯"), specs=[[{"type": "histogram"}, {"type": "box"}]])
+    fig.add_trace(go.Histogram(x=for_hist_df_0, name='미취업', nbinsx=select_term, texttemplate="%{y}", textposition="outside", marker_color='blue'), row=1, col=1)
+    fig.add_trace(go.Histogram(x=for_hist_df_1, name='취업', nbinsx=select_term, texttemplate="%{y}", textposition="outside", marker_color='red'), row=1, col=1)
 
-    df['EMP_kor'] = df['EMP'].map(employment_map)
-    sns.boxplot(x='EMP', y='MEAN', data=df, hue='EMP_kor', ax=ax[1], width=0.5)
+    fig.add_trace(go.Box(y=for_hist_df_0, name="미취업", marker_color='blue', boxpoints='all', showlegend=False), row=1, col=2)
+    fig.add_trace(go.Box(y=for_hist_df_1, name="취업"  , marker_color='red', boxpoints='all', showlegend=False), row=1, col=2)
+    fig.add_trace(go.Scatter(x = ['미취업'], y=[for_hist_df_0.mean()], marker_color = 'green', marker_size=20, marker_symbol="arrow", marker_angle=45, name='평균', showlegend=False), row=1, col=2)
+    fig.add_trace(go.Scatter(x = ['취업'], y=[for_hist_df_1.mean()], marker_color = 'green', marker_size=20, marker_symbol="arrow", marker_angle=45, name='평균', showlegend=False), row=1, col=2)
 
-    for i, row in display_df.iterrows():
-        ax[1].scatter(i, row['MEAN'], color='red', s=50, zorder=5)
+    fig.update_layout(
+        width=1800,
+        height=800,
+        hovermode="x unified",
+        margin=dict(l=40, r=40, t=40, b=40))  
+
+    
+    
+    # for trace in fig.data:
+    fig.layout.xaxis.title.text = "교과목 정규화점수" if scaled else "교과목 평균평점" 
+    fig.layout.yaxis.title.text = "인원 수"
+    fig.layout.xaxis2.title.text = "취업여부"
+    fig.layout.yaxis2.title.text = "교과목 정규화점수" if scaled else "교과목 평균평점" 
+    # fig.show()
+    # print(fig)
+    with tabs[0]:
+        st.dataframe(display_df)
+        st.plotly_chart(fig)
+        # st.subheader(cnt_dept)
         
-    ax[1].set_title(f"{title}_박스플롯")
-    ax[1].set_xlabel("취업여부")
-    ax[1].set_ylabel("평균성적")
-    ax[1].set_xticks([0, 1])
-    ax[1].set_xticklabels(['미취업', '취업'])  # x축 레이블 변경
-    ax[1].legend(title='')
-
-    return fig, ax, display_df
+    # return fig, display_df
 
 
-def tmp(tabs, SC_1 = SC, dept="", scaled = True):
+def tmp(tabs, select_term, SC_1 = SC, dept="", scaled = True):
     if dept:
         title_dept = f"{', '.join(dept)}의 교과목"
         SC_1 = SC_1.loc[SC_1['DEPT'].isin(dept)].reset_index(drop=True)
@@ -135,7 +128,7 @@ def tmp(tabs, SC_1 = SC, dept="", scaled = True):
     result = result_1.merge(right=result_2, on=['DEPT', 'SUBJ', 'EMP'], how='inner')
     
     scaled = False if main_value == 'SCORE_NUM' else True
-    fig1, ax1, display_df = make_graphs(result, "과목", scaled)
+    # make_graphs(df = result, "과목", scaled, select_term=select_term, tabs=tabs)
     
     rows_list = []
     for name, g_df in result.groupby(['DEPT','SUBJ'])[['CNT','EMP', 'MEAN']]:
@@ -160,11 +153,8 @@ def tmp(tabs, SC_1 = SC, dept="", scaled = True):
 
     dept_join_subj = EMP_df_for_graph['DEPT'] +"_"+ EMP_df_for_graph['SUBJ']
     cnt_dept = f"{title_dept} 개수 : {dept_join_subj.nunique()}개"
-    
-    with tabs[0]:
-        st.dataframe(display_df)
-        st.pyplot(fig1)
-        st.subheader(cnt_dept)
+    st.session_state['cnt_dept'] = cnt_dept
+
     
     cols_list = [['미취업', '취업'], ['미취업_2', '취업_2']]
     for cdx, cols in enumerate(cols_list):
@@ -242,7 +232,10 @@ def tmp(tabs, SC_1 = SC, dept="", scaled = True):
         with tabs[cdx+1]:
             st.plotly_chart(fig)
             st.subheader(cnt_dept)
+        st.session_state['figs'][cdx+1] = fig
         # return graph_html
+        
+    return result
 
 all_dept_list = list(SC.DEPT.unique())
 all_dept_list.sort()
@@ -254,11 +247,31 @@ st.write("* 전체 학과로 검색하려면 공란으로 검색하세요.")
 st.write("* 소요시간 : 5초 내외")
 
 st.divider()
+if 'button' not in st.session_state:
+    st.session_state['button'] = False
+if 'result' not in st.session_state:
+    st.session_state['result'] = pd.DataFrame()
+if 'figs' not in st.session_state:
+    st.session_state['figs'] = [0,0,0]
+if 'cnt_dept' not in st.session_state:
+    st.session_state['cnt_dept'] = ""
 
+    
+tabs = st.tabs(["**기본 그래프**", "**평균평점 세부 그래프**", "**정규화점수 세부 그래프**"])
 if start:
-    tabs = st.tabs(["**기본 그래프**", "**평균평점 세부 그래프**", "**정규화점수 세부 그래프**"])
-    fontRegistered()
-    tmp(SC_1 = SC, dept=dept, scaled=True, tabs = tabs)
+    st.session_state['button'] = True
+    result = tmp(SC_1 = SC, dept=dept, scaled=True, tabs = tabs, select_term=20)
+    st.session_state['result'] = result
 
-
-
+if st.session_state['button']:
+    with tabs[0]:
+        c1, _ = st.columns(2)
+        with c1:
+            select_term = st.slider("x축 개수 지정", 10, 50, 20)
+        make_graphs(df=st.session_state['result'], title="과목", scaled=True, select_term=select_term, tabs = tabs)
+    with tabs[1]:
+        st.plotly_chart(st.session_state['figs'][1])
+        st.subheader(st.session_state['cnt_dept'])
+    with tabs[2]:
+        st.plotly_chart(st.session_state['figs'][2])
+        st.subheader(st.session_state['cnt_dept'])
