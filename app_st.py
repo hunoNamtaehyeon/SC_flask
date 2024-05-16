@@ -17,14 +17,23 @@ from scipy.interpolate import make_interp_spline
 
 st.set_page_config(layout="wide")
 
+@st.cache_data
+def fontRegistered():
+    font_dirs = [os.getcwd() + './MALGUN.ttf']
+    font_files = matplotlib.font_manager.findSystemFonts(fontpaths=font_dirs)
+
+    for font_file in font_files:
+        matplotlib.font_manager.fontManager.addfont(font_file)
+    matplotlib.font_manager._load_fontmanager(try_read_cache=False)
+    
 
 sns.set_style('darkgrid')
 pd.options.display.max_rows = 150
 pd.options.display.max_columns = 150
-matplotlib.rcParams['axes.unicode_minus'] = False
-font_path = './MALGUN.ttf'
-font = font_manager.FontProperties(fname=font_path).get_name()
-rc('font', family=font)
+# matplotlib.rcParams['axes.unicode_minus'] = False
+# font_path = './MALGUN.ttf'
+# font = font_manager.FontProperties(fname=font_path).get_name()
+# rc('font', family=font)
 
 SC = pd.read_csv('./0514_전처리완료.csv', encoding='cp949', dtype=object)
 SC['SCORE_NUM'] = SC['SCORE_NUM'].astype(float)
@@ -248,6 +257,7 @@ st.divider()
 
 if start:
     tabs = st.tabs(["**기본 그래프**", "**평균평점 세부 그래프**", "**정규화점수 세부 그래프**"])
+    fontRegistered()
     tmp(SC_1 = SC, dept=dept, scaled=True, tabs = tabs)
 
 
