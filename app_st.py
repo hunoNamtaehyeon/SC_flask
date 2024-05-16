@@ -59,10 +59,13 @@ def make_graphs(df,title,select_term,tabs,scaled=False):
     fig.add_trace(go.Histogram(x=for_hist_df_0, name='미취업', nbinsx=select_term, texttemplate="%{y}", textposition="outside", marker_color='blue'), row=1, col=1)
     fig.add_trace(go.Histogram(x=for_hist_df_1, name='취업', nbinsx=select_term, texttemplate="%{y}", textposition="outside", marker_color='red'), row=1, col=1)
 
-    fig.add_trace(go.Box(y=for_hist_df_0, name="미취업", marker_color='blue', boxpoints='all', showlegend=False), row=1, col=2)
-    fig.add_trace(go.Box(y=for_hist_df_1, name="취업"  , marker_color='red', boxpoints='all', showlegend=False), row=1, col=2)
-    fig.add_trace(go.Scatter(x = ['미취업'], y=[for_hist_df_0.mean()], marker_color = 'green', marker_size=20, marker_symbol="arrow", marker_angle=45, name='평균', showlegend=False), row=1, col=2)
-    fig.add_trace(go.Scatter(x = ['취업'], y=[for_hist_df_1.mean()], marker_color = 'green', marker_size=20, marker_symbol="arrow", marker_angle=45, name='평균', showlegend=False), row=1, col=2)
+    # fig.add_trace(go.Box(y=for_hist_df_0, name="미취업", marker_color='blue', boxpoints='all', showlegend=False), row=1, col=2)
+    # fig.add_trace(go.Box(y=for_hist_df_1, name="취업"  , marker_color='red', boxpoints='all', showlegend=False), row=1, col=2)
+    # fig.add_trace(go.Scatter(x = ['미취업'], y=[for_hist_df_0.mean()], marker_color = 'green', marker_size=20, marker_symbol="arrow", marker_angle=45, name='평균', showlegend=False), row=1, col=2)
+    # fig.add_trace(go.Scatter(x = ['취업'], y=[for_hist_df_1.mean()], marker_color = 'green', marker_size=20, marker_symbol="arrow", marker_angle=45, name='평균', showlegend=False), row=1, col=2)
+    
+    fig.add_trace(go.Violin(y=for_hist_df_0, name="미취업", marker_color='blue', meanline_visible=True, box_visible=True, showlegend=False), row=1, col=2)
+    fig.add_trace(go.Violin(y=for_hist_df_1, name="취업", marker_color='red', meanline_visible=True, box_visible=True, showlegend=False), row=1, col=2)
 
     fig.update_layout(
         width=1800,
