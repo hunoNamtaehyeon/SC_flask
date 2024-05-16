@@ -81,9 +81,9 @@ def make_graphs(df,title,select_term,tabs,scaled=False):
     # print(fig)
     with tabs[0]:
         st.dataframe(display_df)
-        st.plotly_chart(fig)
+        # st.plotly_chart(fig)
         # st.subheader(cnt_dept)
-        
+    st.session_state['figs'][0] = fig  
     # return fig, display_df
 
 
@@ -255,6 +255,7 @@ if st.session_state['button']:
         with c1:
             select_term = st.slider("x축 개수 지정", 10, 50, 20)
         make_graphs(df=st.session_state['result'], title="과목", scaled=True, select_term=select_term, tabs = tabs)
+        st.plotly_chart(st.session_state['figs'][0])
         st.subheader(st.session_state['cnt_dept'])
     with tabs[1]:
         st.plotly_chart(st.session_state['figs'][1])
