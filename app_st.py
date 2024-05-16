@@ -215,9 +215,9 @@ def tmp(tabs, select_term, SC_1 = SC, dept="", scaled = True):
         
         # graph_html = fig.to_html(full_html=False)
         print("4")
-        with tabs[cdx+1]:
-            st.plotly_chart(fig)
-            st.subheader(cnt_dept)
+        # with tabs[cdx+1]:
+        #     st.plotly_chart(fig)
+        #     st.subheader(cnt_dept)
         st.session_state['figs'][cdx+1] = fig
         # return graph_html
         
