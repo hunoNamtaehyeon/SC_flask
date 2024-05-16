@@ -18,23 +18,9 @@ from scipy.interpolate import make_interp_spline
 
 st.set_page_config(layout="wide")
 
-@st.cache_data
-def fontRegistered():
-    font_dirs = [os.getcwd() + '/MALGUN.ttf']
-    font_files = matplotlib.font_manager.findSystemFonts(fontpaths=font_dirs)
-
-    for font_file in font_files:
-        matplotlib.font_manager.fontManager.addfont(font_file)
-    matplotlib.font_manager._load_fontmanager(try_read_cache=False)
-    
-
 sns.set_style('darkgrid')
 pd.options.display.max_rows = 150
 pd.options.display.max_columns = 150
-# matplotlib.rcParams['axes.unicode_minus'] = False
-# font_path = './MALGUN.ttf'
-# font = font_manager.FontProperties(fname=font_path).get_name()
-# rc('font', family=font)
 
 SC = pd.read_csv('./0514_전처리완료.csv', encoding='cp949', dtype=object)
 SC['SCORE_NUM'] = SC['SCORE_NUM'].astype(float)
@@ -269,6 +255,7 @@ if st.session_state['button']:
         with c1:
             select_term = st.slider("x축 개수 지정", 10, 50, 20)
         make_graphs(df=st.session_state['result'], title="과목", scaled=True, select_term=select_term, tabs = tabs)
+        st.subheader(st.session_state['cnt_dept'])
     with tabs[1]:
         st.plotly_chart(st.session_state['figs'][1])
         st.subheader(st.session_state['cnt_dept'])
