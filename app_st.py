@@ -151,8 +151,17 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
     EMP_df = pd.DataFrame(rows, columns=['DEPT', 'SUBJ', '미취업', '취업', 'GAP'])
 
     EMP_df_for_graph = EMP_df.copy()
-    green_df_for_graph = EMP_df_for_graph.loc[EMP_df_for_graph['GAP'] == 0]
-    reversal_point = EMP_df_for_graph.loc[EMP_df_for_graph['GAP'] < 0].index[0]
+    
+    try:
+        green_df_for_graph = EMP_df_for_graph.loc[EMP_df_for_graph['GAP'] == 0]
+        reversal_point = EMP_df_for_graph.loc[EMP_df_for_graph['GAP'] < 0].index[0]
+        st.session_state['df_not_error'] = True
+    except:
+        for tab in tabs:
+            with tab:
+                st.error("선택된 학과(들)은 교과목 성적 정보를 취업/미취업으로 분류할 수 없습니다.\n1. 데이터 부족\n2. 취업/미취업 최소 구분 인원 수(2명) 충족 못함.")
+        st.session_state['df_not_error'] = False
+        return result
     
     EMP_df_for_graph['GAP_2'] = EMP_df_for_graph['GAP']/2
     EMP_df_for_graph['미취업_2'] = 0.5 + EMP_df_for_graph['GAP_2']
@@ -166,7 +175,7 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
     over_cnt_0 = (EMP_df_for_graph.GAP > 0).sum()
     pie_fig = px.pie(values=[over_cnt_1, same_cnt, over_cnt_0], 
                      names=['취업 > 미취업','취업=미취업','취업 < 미취업'],
-                     title=f"점수 우위 과목 수")
+                     title="점수 우위 과목 수")
     pie_fig.update_traces(
                 textfont_size = 20,
                 marker_colors = ['red', 'green', 'blue'],
@@ -280,6 +289,8 @@ if 'cnt_dept' not in st.session_state:
     st.session_state['cnt_dept'] = ""
 if 'radio_state' not in st.session_state:
     st.session_state['radio_state'] = schl
+if 'df_not_error' not in st.session_state:
+    st.session_state['df_not_error'] = True
 
     
 tabs = st.tabs(["**기본 그래프**", "**평균평점 세부 그래프**", "**정규화점수 세부 그래프**"])
@@ -289,7 +300,7 @@ if schl == st.session_state.radio_state:
         result = tmp(DF_1 = DF, dept=dept, scaled=True, tabs = tabs, select_term=20)
         st.session_state['result'] = result
 
-    if st.session_state['button']:
+    if st.session_state['button'] & st.session_state['df_not_error']:
         with tabs[0]:
             c1, _ = st.columns(2)
             with c1:
