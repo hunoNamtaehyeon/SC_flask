@@ -22,11 +22,30 @@ sns.set_style('darkgrid')
 pd.options.display.max_rows = 150
 pd.options.display.max_columns = 150
 
-SC = pd.read_csv('./0514_전처리완료.csv', encoding='cp949', dtype=object)
-SC['SCORE_NUM'] = SC['SCORE_NUM'].astype(float)
-SC['EMP'] = SC['EMP'].astype(int)
-SC['MM_all_subj'] = SC['MM_all_subj'].astype(float)
-SC['MM_per_subj'] = SC['MM_per_subj'].astype(float)
+
+st.header('학교 선택')
+schl = st.radio(' ', ['순천향대학교', '청주대학교'], label_visibility = 'collapsed', horizontal = True)
+
+if 'SC' not in st.session_state:
+    SC = pd.read_csv('./0514_전처리완료.csv', encoding='cp949', dtype=object)
+    SC['SCORE_NUM'] = SC['SCORE_NUM'].astype(float)
+    SC['EMP'] = SC['EMP'].astype(int)
+    SC['MM_all_subj'] = SC['MM_all_subj'].astype(float)
+    SC['MM_per_subj'] = SC['MM_per_subj'].astype(float)
+    st.session_state['SC'] = SC
+    
+if 'CJ' not in st.session_state:
+    CJ = pd.read_csv('./0520_청주_전처리완료.csv', encoding='cp949', dtype=object)
+    CJ['SCORE_NUM'] = CJ['SCORE_NUM'].astype(float)
+    CJ['EMP'] = CJ['EMP'].astype(int)
+    CJ['MM_all_subj'] = CJ['MM_all_subj'].astype(float)
+    CJ['MM_per_subj'] = CJ['MM_per_subj'].astype(float)
+    st.session_state['CJ'] = CJ
+
+if schl == '순천향대학교':
+    DF = st.session_state['SC']
+else:
+    DF = st.session_state['CJ']
 
 def make_graphs(df,title,select_term,tabs,scaled=False):
     if scaled:
@@ -90,22 +109,22 @@ def make_graphs(df,title,select_term,tabs,scaled=False):
     # return fig, display_df
 
 
-def tmp(tabs, select_term, SC_1 = SC, dept="", scaled = True):
+def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
     if dept:
         title_dept = f"{', '.join(dept)}의 교과목"
-        SC_1 = SC_1.loc[SC_1['DEPT'].isin(dept)].reset_index(drop=True)
+        DF_1 = DF_1.loc[DF_1['DEPT'].isin(dept)].reset_index(drop=True)
     else:
         title_dept = "전체 학과의 교과목"
-        SC_1 = SC_1.reset_index(drop=True)
+        DF_1 = DF_1.reset_index(drop=True)
         
     main_value = "MM_per_subj" # SCORE_NUM or MM_per_subj
-    result_1 = SC_1.groupby(['DEPT', 'SUBJ', 'EMP'])[main_value].agg(
+    result_1 = DF_1.groupby(['DEPT', 'SUBJ', 'EMP'])[main_value].agg(
         MEAN='mean',
         ).reset_index().sort_index()
     result_1['MEAN'] = result_1['MEAN'].round(4)
     # result_1
     
-    result_2 = SC_1.groupby(['DEPT','SUBJ', 'EMP'])['EMP'].size().reset_index(name='CNT').sort_index()
+    result_2 = DF_1.groupby(['DEPT','SUBJ', 'EMP'])['EMP'].size().reset_index(name='CNT').sort_index()
     upper_list = []
     for name, g_df in result_2.groupby(['DEPT', 'SUBJ']):
         g_df = g_df.sort_values('EMP')
@@ -226,7 +245,7 @@ def tmp(tabs, select_term, SC_1 = SC, dept="", scaled = True):
         
     return result
 
-all_dept_list = list(SC.DEPT.unique())
+all_dept_list = list(DF.DEPT.unique())
 all_dept_list.sort()
 
 st.header("학과 선택")
@@ -249,7 +268,7 @@ if 'cnt_dept' not in st.session_state:
 tabs = st.tabs(["**기본 그래프**", "**평균평점 세부 그래프**", "**정규화점수 세부 그래프**"])
 if start:
     st.session_state['button'] = True
-    result = tmp(SC_1 = SC, dept=dept, scaled=True, tabs = tabs, select_term=20)
+    result = tmp(DF_1 = DF, dept=dept, scaled=True, tabs = tabs, select_term=20)
     st.session_state['result'] = result
 
 if st.session_state['button']:
