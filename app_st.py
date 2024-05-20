@@ -160,6 +160,22 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
 
     dept_join_subj = EMP_df_for_graph['DEPT'] +"_"+ EMP_df_for_graph['SUBJ']
     cnt_dept = f"{title_dept} 개수 : {dept_join_subj.nunique()}개"
+    
+    over_cnt_1 = (EMP_df_for_graph.GAP < 0).sum()
+    same_cnt = (EMP_df_for_graph.GAP == 0).sum()
+    over_cnt_0 = (EMP_df_for_graph.GAP > 0).sum()
+    pie_fig = px.pie(values=[over_cnt_1, same_cnt, over_cnt_0], 
+                     names=['취업 > 미취업','취업=미취업','취업 < 미취업'],
+                     title=f"점수 우위 과목 수")
+    pie_fig.update_traces(
+                textfont_size = 20,
+                marker_colors = ['red', 'green', 'blue'],
+                marker_line_color= "black",
+                marker_line_width = 3
+    )
+    pie_fig.update_layout(font=dict(size=15))
+    
+    st.session_state['figs'][1] = pie_fig
     st.session_state['cnt_dept'] = cnt_dept
 
     
@@ -239,7 +255,7 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
         # with tabs[cdx+1]:
         #     st.plotly_chart(fig)
         #     st.subheader(cnt_dept)
-        st.session_state['figs'][cdx+1] = fig
+        st.session_state['figs'][cdx+2] = fig
         # return graph_html
         
     return result
@@ -259,7 +275,7 @@ if 'button' not in st.session_state:
 if 'result' not in st.session_state:
     st.session_state['result'] = pd.DataFrame()
 if 'figs' not in st.session_state:
-    st.session_state['figs'] = [0,0,0]
+    st.session_state['figs'] = [0,0,0,0]
 if 'cnt_dept' not in st.session_state:
     st.session_state['cnt_dept'] = ""
 if 'radio_state' not in st.session_state:
@@ -282,10 +298,12 @@ if schl == st.session_state.radio_state:
             st.plotly_chart(st.session_state['figs'][0])
             st.subheader(st.session_state['cnt_dept'])
         with tabs[1]:
+            st.plotly_chart(st.session_state['figs'][2])
             st.plotly_chart(st.session_state['figs'][1])
             st.subheader(st.session_state['cnt_dept'])
         with tabs[2]:
-            st.plotly_chart(st.session_state['figs'][2])
+            st.plotly_chart(st.session_state['figs'][3])
+            st.plotly_chart(st.session_state['figs'][1])
             st.subheader(st.session_state['cnt_dept'])
 else:
     st.session_state['button'] = False
