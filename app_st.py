@@ -22,7 +22,6 @@ sns.set_style('darkgrid')
 pd.options.display.max_rows = 150
 pd.options.display.max_columns = 150
 
-
 st.header('학교 선택')
 schl = st.radio(' ', ['순천향대학교', '청주대학교'], label_visibility = 'collapsed', horizontal = True)
 
@@ -263,25 +262,33 @@ if 'figs' not in st.session_state:
     st.session_state['figs'] = [0,0,0]
 if 'cnt_dept' not in st.session_state:
     st.session_state['cnt_dept'] = ""
+if 'radio_state' not in st.session_state:
+    st.session_state['radio_state'] = schl
 
     
 tabs = st.tabs(["**기본 그래프**", "**평균평점 세부 그래프**", "**정규화점수 세부 그래프**"])
-if start:
-    st.session_state['button'] = True
-    result = tmp(DF_1 = DF, dept=dept, scaled=True, tabs = tabs, select_term=20)
-    st.session_state['result'] = result
+if schl == st.session_state.radio_state:
+    if start:
+        st.session_state['button'] = True
+        result = tmp(DF_1 = DF, dept=dept, scaled=True, tabs = tabs, select_term=20)
+        st.session_state['result'] = result
 
-if st.session_state['button']:
-    with tabs[0]:
-        c1, _ = st.columns(2)
-        with c1:
-            select_term = st.slider("x축 개수 지정", 10, 50, 20)
-        make_graphs(df=st.session_state['result'], title="과목", scaled=True, select_term=select_term, tabs = tabs)
-        st.plotly_chart(st.session_state['figs'][0])
-        st.subheader(st.session_state['cnt_dept'])
-    with tabs[1]:
-        st.plotly_chart(st.session_state['figs'][1])
-        st.subheader(st.session_state['cnt_dept'])
-    with tabs[2]:
-        st.plotly_chart(st.session_state['figs'][2])
-        st.subheader(st.session_state['cnt_dept'])
+    if st.session_state['button']:
+        with tabs[0]:
+            c1, _ = st.columns(2)
+            with c1:
+                select_term = st.slider("x축 개수 지정", 10, 50, 20)
+            make_graphs(df=st.session_state['result'], title="과목", scaled=True, select_term=select_term, tabs = tabs)
+            st.plotly_chart(st.session_state['figs'][0])
+            st.subheader(st.session_state['cnt_dept'])
+        with tabs[1]:
+            st.plotly_chart(st.session_state['figs'][1])
+            st.subheader(st.session_state['cnt_dept'])
+        with tabs[2]:
+            st.plotly_chart(st.session_state['figs'][2])
+            st.subheader(st.session_state['cnt_dept'])
+else:
+    st.session_state['button'] = False
+        
+        
+st.session_state.radio_state = schl
