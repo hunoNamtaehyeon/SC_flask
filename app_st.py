@@ -163,10 +163,11 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
                      names=['취업 > 미취업','취업=미취업','취업 < 미취업'],
                      title="점수 우위 과목 수")
     pie_fig.update_traces(
-                textfont_size = 20,
+                textfont_size = 15,
                 marker_colors = ['red', 'green', 'blue'],
                 marker_line_color= "black",
-                marker_line_width = 3
+                textposition='outside',
+                textinfo='label+percent+value'
     )
     pie_fig.update_layout(font=dict(size=15))
     pie_fig.data[0].hovertemplate = '구분=%{label}<br>과목 수=%{value}<extra></extra>'
