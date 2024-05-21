@@ -159,16 +159,27 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
     over_cnt_1 = (EMP_df_for_graph.GAP < 0).sum()
     same_cnt = (EMP_df_for_graph.GAP == 0).sum()
     over_cnt_0 = (EMP_df_for_graph.GAP > 0).sum()
-    pie_fig = px.pie(values=[over_cnt_1, same_cnt, over_cnt_0], 
-                     names=['취업 > 미취업','취업=미취업','취업 < 미취업'],
-                     title="점수 우위 과목 수")
+
+    values = [over_cnt_1, same_cnt, over_cnt_0]
+    names = ['취업 > 미취업','취업=미취업','취업 < 미취업']
+    colors = ['red', 'green', 'blue']
+
+    filtered_values = [value for value in values if value != 0]
+    filtered_names = [names[i] for i in range(len(values)) if values[i] != 0]
+    filtered_colors = [colors[i] for i in range(len(values)) if values[i] != 0]
+
+    pie_fig = px.pie(values=filtered_values, 
+                    names=filtered_names,
+                    title="점수 우위 과목 수")
+
     pie_fig.update_traces(
-                textfont_size = 15,
-                marker_colors = ['red', 'green', 'blue'],
-                marker_line_color= "black",
-                textposition='outside',
-                textinfo='label+percent+value'
+        textfont_size=15,
+        marker_colors=filtered_colors,
+        marker_line_color="black",
+        textposition='outside',
+        textinfo='label+percent+value'
     )
+
     pie_fig.update_layout(font=dict(size=15))
     pie_fig.data[0].hovertemplate = '구분=%{label}<br>과목 수=%{value}<extra></extra>'
     
