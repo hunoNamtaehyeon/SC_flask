@@ -47,6 +47,9 @@ if schl == '순천향대학교':
 else:
     DF = st.session_state['CJ']
 
+
+
+
 def make_graphs(df,title,select_term,tabs,scaled=False):
     if scaled:
         print("스케일된 상태")
@@ -98,6 +101,81 @@ def make_graphs(df,title,select_term,tabs,scaled=False):
     st.session_state['figs'][0] = fig  
 
 
+def make_pie_graph(EMP_df_for_graph):
+    pie_hover_list = []
+
+    EMP_df_for_graph['GAP_2'] = EMP_df_for_graph['GAP']/2
+    EMP_df_for_graph['미취업_2'] = 0.5 + EMP_df_for_graph['GAP_2']
+    EMP_df_for_graph['취업_2'] = 0.5 - EMP_df_for_graph['GAP_2']
+    
+    over_df_1 = EMP_df_for_graph[(EMP_df_for_graph.GAP < 0)]
+    same_df   = EMP_df_for_graph[(EMP_df_for_graph.GAP == 0)]
+    over_df_0 = EMP_df_for_graph[(EMP_df_for_graph.GAP > 0)]
+
+    div_list = list(EMP_df_for_graph.DIV.unique())
+
+    for chk_df in [over_df_1, same_df, over_df_0]:
+        piece_dict = dict({div : 0 for div in div_list})
+        for u_d in div_list:
+            div_cnt = len(chk_df.loc[chk_df['DIV'] == u_d])
+            piece_dict[u_d] = div_cnt
+        pie_hover_list.append(piece_dict)
+
+    over_df_1 = EMP_df_for_graph[(EMP_df_for_graph.GAP < 0)]
+    same_df   = EMP_df_for_graph[(EMP_df_for_graph.GAP == 0)]
+    over_df_0 = EMP_df_for_graph[(EMP_df_for_graph.GAP > 0)]
+
+    div_list = list(EMP_df_for_graph.DIV.unique())
+
+    # 값과 이름 리스트를 생성합니다.
+    values = [len(over_df_1), len(same_df), len(over_df_0)]
+    names = ['취업 > 미취업','취업=미취업','취업 < 미취업']
+    colors = ['red', 'green', 'blue']
+
+    # 값이 0이 아닌 데이터만 필터링합니다.
+    filtered_values = [value for value in values if value != 0]
+    filtered_names = [names[i] for i in range(len(values)) if values[i] != 0]
+    filtered_colors = [colors[i] for i in range(len(values)) if values[i] != 0]
+    filtered_extra_info = [pie_hover_list[i] for i in range(len(values)) if values[i] != 0]
+
+    # 필터링된 데이터를 사용하여 파이 차트를 생성합니다.
+    pie_fig = px.pie(values=filtered_values, 
+                    names=filtered_names,
+                    title="점수 우위 과목 수")
+
+    # customdata에 추가 정보를 저장합니다.
+    customdata = [[e_v for e_v in extra.values()] for extra in filtered_extra_info]
+
+    hover_text = '전체=%{value}<br>'
+
+    for ddx, div in enumerate(div_list):
+        div_text = f'{div_list[ddx]}'+'=%{customdata[0]['+str(ddx)+']}'
+        hover_text += div_text
+        if ddx != len(div_list)-1:
+            hover_text += '<br>'
+
+    hover_text += '<extra></extra>'
+
+    # 트레이스를 업데이트합니다.
+    pie_fig.update_traces(
+        textfont_size=15,
+        marker_colors=filtered_colors,
+        marker_line_color="black",
+        textposition='outside',
+        textinfo='label+percent+value',
+        customdata=customdata,
+        hovertemplate=hover_text
+    )
+
+    # 레이아웃을 업데이트합니다.
+    pie_fig.update_layout(font=dict(size=15))
+
+    # # 그래프를 출력합니다.
+    # pie_fig.show()
+    st.session_state['figs'][1] = pie_fig
+    
+    return EMP_df_for_graph
+
 def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
     if dept:
         title_dept = f"{', '.join(dept)}의 교과목"
@@ -107,7 +185,7 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
         DF_1 = DF_1.reset_index(drop=True)
         
     main_value = "MM_per_subj" # SCORE_NUM or MM_per_subj
-    result_1 = DF_1.groupby(['DEPT', 'SUBJ', 'EMP'])[main_value].agg(
+    result_1 = DF_1.groupby(['DEPT', 'SUBJ', 'EMP', 'DIV'])[main_value].agg(
         MEAN='mean',
         ).reset_index().sort_index()
     result_1['MEAN'] = result_1['MEAN'].round(4)
@@ -126,7 +204,7 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
     scaled = False if main_value == 'SCORE_NUM' else True
     
     rows_list = []
-    for name, g_df in result.groupby(['DEPT','SUBJ'])[['CNT','EMP', 'MEAN']]:
+    for name, g_df in result.groupby(['DEPT','SUBJ', 'DIV'])[['CNT','EMP', 'MEAN']]:
         g_df = g_df.sort_values('EMP')
         if len(g_df) != 1:
             if (g_df.iloc[0,-3] > 2) & (g_df.iloc[1,-3] > 2):
@@ -135,7 +213,7 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
 
     rows = sorted(rows_list,key=lambda x : (-x[-1], -x[-3], x[-2]))
 
-    EMP_df = pd.DataFrame(rows, columns=['DEPT', 'SUBJ', '미취업', '취업', 'GAP'])
+    EMP_df = pd.DataFrame(rows, columns=['DEPT', 'SUBJ', 'DIV', '미취업', '취업', 'GAP'])
 
     EMP_df_for_graph = EMP_df.copy()
     
@@ -150,43 +228,12 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
         st.session_state['df_not_error'] = False
         return result
     
-    EMP_df_for_graph['GAP_2'] = EMP_df_for_graph['GAP']/2
-    EMP_df_for_graph['미취업_2'] = 0.5 + EMP_df_for_graph['GAP_2']
-    EMP_df_for_graph['취업_2'] = 0.5 - EMP_df_for_graph['GAP_2']
-
-    dept_join_subj = EMP_df_for_graph['DEPT'] +"_"+ EMP_df_for_graph['SUBJ']
+    dept_join_subj = EMP_df_for_graph['DEPT'] + "_" + EMP_df_for_graph['DIV'] + "_" + EMP_df_for_graph['SUBJ']
     cnt_dept = f"{title_dept} 개수 : {dept_join_subj.nunique()}개"
     
-    over_cnt_1 = (EMP_df_for_graph.GAP < 0).sum()
-    same_cnt = (EMP_df_for_graph.GAP == 0).sum()
-    over_cnt_0 = (EMP_df_for_graph.GAP > 0).sum()
+    EMP_df_for_graph = make_pie_graph(EMP_df_for_graph)
 
-    values = [over_cnt_1, same_cnt, over_cnt_0]
-    names = ['취업 > 미취업','취업=미취업','취업 < 미취업']
-    colors = ['red', 'green', 'blue']
-
-    filtered_values = [value for value in values if value != 0]
-    filtered_names = [names[i] for i in range(len(values)) if values[i] != 0]
-    filtered_colors = [colors[i] for i in range(len(values)) if values[i] != 0]
-
-    pie_fig = px.pie(values=filtered_values, 
-                    names=filtered_names,
-                    title="점수 우위 과목 수")
-
-    pie_fig.update_traces(
-        textfont_size=15,
-        marker_colors=filtered_colors,
-        marker_line_color="black",
-        textposition='outside',
-        textinfo='label+percent+value'
-    )
-
-    pie_fig.update_layout(font=dict(size=15))
-    pie_fig.data[0].hovertemplate = '구분=%{label}<br>과목 수=%{value}<extra></extra>'
-    
-    st.session_state['figs'][1] = pie_fig
     st.session_state['cnt_dept'] = cnt_dept
-
     
     cols_list = [['미취업', '취업'], ['미취업_2', '취업_2']]
     for cdx, cols in enumerate(cols_list):
