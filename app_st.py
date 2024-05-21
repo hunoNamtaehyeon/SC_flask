@@ -34,7 +34,8 @@ if 'SC' not in st.session_state:
     st.session_state['SC'] = SC
     
 if 'CJ' not in st.session_state:
-    CJ = pd.read_csv('./0520_청주_전처리완료.csv', encoding='cp949', dtype=object)
+    # CJ = pd.read_csv('./0520_청주_전처리완료.csv', encoding='cp949', dtype=object)
+    CJ = pd.read_csv('./0521_청주_신입학만_전처리완료.csv', encoding='cp949', dtype=object)
     CJ['SCORE_NUM'] = CJ['SCORE_NUM'].astype(float)
     CJ['EMP'] = CJ['EMP'].astype(int)
     CJ['MM_all_subj'] = CJ['MM_all_subj'].astype(float)
