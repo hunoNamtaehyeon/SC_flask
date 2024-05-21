@@ -77,11 +77,6 @@ def make_graphs(df,title,select_term,tabs,scaled=False):
     fig.add_trace(go.Histogram(x=for_hist_df_0, name='미취업', nbinsx=select_term, texttemplate="%{y}", textposition="outside", marker_color='blue'), row=1, col=1)
     fig.add_trace(go.Histogram(x=for_hist_df_1, name='취업', nbinsx=select_term, texttemplate="%{y}", textposition="outside", marker_color='red'), row=1, col=1)
 
-    # fig.add_trace(go.Box(y=for_hist_df_0, name="미취업", marker_color='blue', boxpoints='all', showlegend=False), row=1, col=2)
-    # fig.add_trace(go.Box(y=for_hist_df_1, name="취업"  , marker_color='red', boxpoints='all', showlegend=False), row=1, col=2)
-    # fig.add_trace(go.Scatter(x = ['미취업'], y=[for_hist_df_0.mean()], marker_color = 'green', marker_size=20, marker_symbol="arrow", marker_angle=45, name='평균', showlegend=False), row=1, col=2)
-    # fig.add_trace(go.Scatter(x = ['취업'], y=[for_hist_df_1.mean()], marker_color = 'green', marker_size=20, marker_symbol="arrow", marker_angle=45, name='평균', showlegend=False), row=1, col=2)
-    
     fig.add_trace(go.Violin(y=for_hist_df_0, name="미취업", marker_color='blue', meanline_visible=True, box_visible=True, showlegend=False), row=1, col=2)
     fig.add_trace(go.Violin(y=for_hist_df_1, name="취업", marker_color='red', meanline_visible=True, box_visible=True, showlegend=False), row=1, col=2)
 
@@ -93,19 +88,13 @@ def make_graphs(df,title,select_term,tabs,scaled=False):
 
     
     
-    # for trace in fig.data:
     fig.layout.xaxis.title.text = "교과목 정규화점수" if scaled else "교과목 평균평점" 
     fig.layout.yaxis.title.text = "인원 수"
     fig.layout.xaxis2.title.text = "취업여부"
     fig.layout.yaxis2.title.text = "교과목 정규화점수" if scaled else "교과목 평균평점" 
-    # fig.show()
-    # print(fig)
     with tabs[0]:
         st.dataframe(display_df)
-        # st.plotly_chart(fig)
-        # st.subheader(cnt_dept)
     st.session_state['figs'][0] = fig  
-    # return fig, display_df
 
 
 def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
@@ -121,7 +110,6 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
         MEAN='mean',
         ).reset_index().sort_index()
     result_1['MEAN'] = result_1['MEAN'].round(4)
-    # result_1
     
     result_2 = DF_1.groupby(['DEPT','SUBJ', 'EMP'])['EMP'].size().reset_index(name='CNT').sort_index()
     upper_list = []
@@ -135,7 +123,6 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
     result = result_1.merge(right=result_2, on=['DEPT', 'SUBJ', 'EMP'], how='inner')
     
     scaled = False if main_value == 'SCORE_NUM' else True
-    # make_graphs(df = result, "과목", scaled, select_term=select_term, tabs=tabs)
     
     rows_list = []
     for name, g_df in result.groupby(['DEPT','SUBJ'])[['CNT','EMP', 'MEAN']]:
@@ -143,7 +130,6 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
         if len(g_df) != 1:
             if (g_df.iloc[0,-3] > 2) & (g_df.iloc[1,-3] > 2):
                 row = list(name) + [g_df.iloc[0,-1], g_df.iloc[1,-1]] + [g_df.iloc[0,-1] - g_df.iloc[1,-1]]
-                # row = list(name) + [g_df.iloc[0,-1], g_df.iloc[1,-1]] + [(g_df.iloc[0,-1] + g_df.iloc[1,-1])/2]
                 rows_list.append(row)
 
     rows = sorted(rows_list,key=lambda x : (-x[-1], -x[-3], x[-2]))
@@ -159,7 +145,7 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
     except:
         for tab in tabs:
             with tab:
-                st.error("선택된 학과(들)은 교과목 성적 정보를 취업/미취업으로 분류할 수 없습니다.\n1. 데이터 부족\n2. 취업/미취업 최소 구분 인원 수(2명) 충족 못함.")
+                st.error("선택된 학과(들)은 교과목 성적 정보를 취업/미취업으로 분류할 수 없습니다.\n* 데이터 부족\n* 취업/미취업 최소 구분 인원 수(각 2명씩) 충족 못함.")
         st.session_state['df_not_error'] = False
         return result
     
@@ -196,7 +182,6 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
                         trendline_options=dict(frac=0.25 if dept else 0.05),
                         title=f"{title_dept}\n취업VS미취업")
                 
-        print("1")
         fig.update_layout(
             width=1800,
             height=800,
@@ -205,7 +190,6 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
 
         fig.update_traces(textfont=dict(color='rgba(0,0,0,0)'))
 
-        print("2")
         #############################################
         # 평균차이 없음
         if len(green_df_for_graph) > 0:
@@ -254,18 +238,10 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
             else:
                 trace.marker.color = "#636efa"
 
-        print("3")
-        # fig.data = [t for t in fig.data if t.mode == "lines"]
         fig.layout.xaxis.title.text = "교과목 인덱스"
         fig.layout.yaxis.title.text = "교과목 평균평점" if cdx == 0 else "교과목 정규화점수"
         
-        # graph_html = fig.to_html(full_html=False)
-        print("4")
-        # with tabs[cdx+1]:
-        #     st.plotly_chart(fig)
-        #     st.subheader(cnt_dept)
         st.session_state['figs'][cdx+2] = fig
-        # return graph_html
         
     return result
 
@@ -318,6 +294,5 @@ if schl == st.session_state.radio_state:
             st.subheader(st.session_state['cnt_dept'])
 else:
     st.session_state['button'] = False
-        
         
 st.session_state.radio_state = schl
