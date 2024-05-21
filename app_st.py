@@ -169,6 +169,7 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
                 marker_line_width = 3
     )
     pie_fig.update_layout(font=dict(size=15))
+    pie_fig.data[0].hovertemplate = '구분=%{label}<br>과목 수=%{value}<extra></extra>'
     
     st.session_state['figs'][1] = pie_fig
     st.session_state['cnt_dept'] = cnt_dept
