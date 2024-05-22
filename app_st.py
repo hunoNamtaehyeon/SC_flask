@@ -304,7 +304,7 @@ def tmp(tabs, select_term, DF_1 = DF, dept="", scaled = True):
         
         st.session_state['figs'][cdx+2] = fig
         
-    return result
+    return result, EMP_df_for_graph
 
 all_dept_list = list(DF.DEPT.unique())
 all_dept_list.sort()
@@ -320,6 +320,10 @@ if 'button' not in st.session_state:
     st.session_state['button'] = False
 if 'result' not in st.session_state:
     st.session_state['result'] = pd.DataFrame()
+if 'EMP_df_for_graph' not in st.session_state:
+    st.session_state['EMP_df_for_graph'] = pd.DataFrame()
+if 'EMP_df_for_graph_S' not in st.session_state:
+    st.session_state['EMP_df_for_graph_S'] = pd.DataFrame()
 if 'figs' not in st.session_state:
     st.session_state['figs'] = [0,0,0,0]
 if 'cnt_dept' not in st.session_state:
@@ -334,11 +338,15 @@ tabs = st.tabs(["**기본 그래프**", "**평균평점 세부 그래프**", "**
 if schl == st.session_state.radio_state:
     if start:
         st.session_state['button'] = True
-        result = tmp(DF_1 = DF, dept=dept, scaled=True, tabs = tabs, select_term=20)
+        result, EMP_df_for_graph = tmp(DF_1 = DF, dept=dept, scaled=True, tabs = tabs, select_term=20)
         st.session_state['result'] = result
+        st.session_state['EMP_df_for_graph'] = EMP_df_for_graph[['DEPT','SUBJ','DIV','취업','미취업', 'GAP']]
+        st.session_state['EMP_df_for_graph_S'] = EMP_df_for_graph[['DEPT','SUBJ','DIV','취업_2','미취업_2', 'GAP_2']]
 
     if st.session_state['button'] & st.session_state['df_not_error']:
         with tabs[0]:
+            with st.expander("**데이터 확인**"):
+                st.dataframe(st.session_state['EMP_df_for_graph'], use_container_width=True)
             c1, _ = st.columns(2)
             with c1:
                 select_term = st.slider("x축 개수 지정", 10, 50, 20)
@@ -346,10 +354,14 @@ if schl == st.session_state.radio_state:
             st.plotly_chart(st.session_state['figs'][0])
             st.subheader(st.session_state['cnt_dept'])
         with tabs[1]:
+            with st.expander("**데이터 확인**"):
+                st.dataframe(st.session_state['EMP_df_for_graph'], use_container_width=True)
             st.plotly_chart(st.session_state['figs'][2])
             st.plotly_chart(st.session_state['figs'][1])
             st.subheader(st.session_state['cnt_dept'])
         with tabs[2]:
+            with st.expander("**데이터 확인**"):
+                st.dataframe(st.session_state['EMP_df_for_graph_S'], use_container_width=True)
             st.plotly_chart(st.session_state['figs'][3])
             st.plotly_chart(st.session_state['figs'][1])
             st.subheader(st.session_state['cnt_dept'])
